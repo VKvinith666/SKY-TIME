@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE SKY TIME | Aquatic Edition</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define a custom configuration for the glass effect */
+        html {
+            /* Using Inter font as per guidelines */
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* --- Custom Animated Watery Background --- */
+        body {
+            /* A base dark blue for the "deep water" feel */
+            background: #0a0e1c; 
+            min-height: 100vh;
+            padding-bottom: 2rem;
+            overflow-x: hidden; /* Prevent horizontal scroll due to animations */
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Animated gradient for watery flow */
+            background: linear-gradient(
+                135deg, 
+                #003366 0%,   /* Deep ocean blue */
+                #001a33 25%,  /* Darker blue */
+                #0a0e1c 50%,  /* Body background color */
+                #001a33 75%,
+                #003366 100%
+            );
+            background-size: 400% 400%; /* Larger than viewport for smooth animation */
+            animation: gradientShift 20s ease infinite alternate; /* Slow, gentle shift */
+            opacity: 0.8; /* Keep it subtle */
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* --- Enhanced Glass Morphism --- */
+        .glass-panel {
+            /* Even more transparent, bluer base */
+            background-color: rgba(0, 70, 100, 0.15); /* Blue-ish tint */
+            /* Increased blur for a stronger, "underwater" effect */
+            backdrop-filter: blur(40px);
+            /* Thicker, more subtle border that matches the theme */
+            border: 2px solid rgba(100, 200, 255, 0.2); /* Lighter blue border */
+            /* Softer, more ethereal shadow */
+            box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.4);
+            transition: all 0.4s ease-out; /* Smoother transition */
+            border-radius: 1.5rem; /* More rounded for a fluid look */
+        }
+        
+        .glass-panel:hover {
+            box-shadow: 0 12px 45px 0 rgba(0, 0, 0, 0.5);
+            /* Subtle scale for "floating" effect */
+            transform: translateY(-2px); 
+        }
+
+        /* --- Interactive Elements with Watery Touches --- */
+        details summary {
+            transition: background-color 0.3s ease, color 0.3s ease;
+            border-radius: 1.2rem; /* Match panel rounding */
+        }
+        details summary:hover {
+            background-color: rgba(0, 150, 255, 0.1); /* Gentle blue highlight */
+        }
+        /* Style for the dropdown icon */
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details summary::after {
+            content: '▼';
+            transition: transform 0.3s;
+            display: inline-block;
+            margin-left: 0.5rem;
+            color: rgba(150, 220, 255, 0.7); /* Lighter icon color */
+        }
+        details[open] summary::after {
+            transform: rotate(180deg);
+        }
+        /* Custom input style for the glassy look */
+        #location-input {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(150, 220, 255, 0.4); /* Watery blue border */
+            transition: all 0.2s;
+        }
+        #location-input:focus {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #88c9fa; /* Brighter blue on focus */
+            outline: none;
+        }
+        /* Ensure the active window border changes smoothly */
+        #active-event-window {
+            border-color: rgba(100, 200, 255, 0.2); 
+            transition: border-color 0.5s ease, transform 0.3s ease;
+        }
+
+        /* --- Text and Button Refinements --- */
+        .text-card-light { color: #c4e0f9; } /* Lighter, more aquatic text */
+        .text-gray-300 { color: #a6cbe6; } /* Adjusted gray for better contrast */
+        .text-gray-400 { color: #8cb8d9; }
+        .text-gray-500 { color: #72a1bd; }
+
+        .btn-primary {
+            background-color: #4a90e2; /* Clearer blue */
+            box-shadow: 0 4px 15px rgba(0, 120, 255, 0.3); /* Soft blue shadow */
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #6aabf2; /* Lighter on hover */
+            box-shadow: 0 6px 20px rgba(0, 120, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Small animation for event rows on hover */
+        .event-row:hover {
+            background-color: rgba(0, 150, 255, 0.05); /* Gentle blue tint */
+            transform: translateX(2px); /* Slight shift right */
+            box-shadow: inset 3px 0 0 0 rgba(0, 150, 255, 0.3); /* Left border highlight */
+        }
+
+        /* Alert button specific styling */
+        .alert-button {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .alert-button:hover {
+            transform: scale(1.1);
+        }
+
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-dark': '#0a0e1c', /* Darker blue background */
+                        'card-light': '#c4e0f9', /* Lighter, aquatic text */
+                        'accent-blue': '#88c9fa', /* Brighter, watery blue */
+                        'accent-green': '#6ee7b7', /* Softer green for active */
+                        'accent-red': '#fca5a5', /* Muted red for shards */
+                        'accent-orange': '#fdba74', /* Softer orange for alerts */
+                        'accent-purple': '#c4b5fd', /* Muted purple for seasonal */
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-white flex flex-col items-center p-4">
+
+    
+    <div id="custom-message" class="fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-x-full opacity-0 max-w-sm" style="min-width: 200px;">
+        <p class="font-semibold" id="message-text"></p>
+        <p class="text-xs mt-1 text-gray-200 italic" id="message-detail"></p>
+    </div>
+
+    <div class="w-full max-w-lg md:max-w-xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-card-light tracking-wider drop-shadow-lg">THE SKY TIME</h1>
+            <p class="text-sm text-gray-400 italic">Where Every Journey Holds a Secret.</p>
+        </header>
+        
+        
+        <div class="glass-panel p-4 mb-4 rounded-xl">
+            <h3 class="text-sm text-gray-300 mb-2 uppercase tracking-widest font-semibold">Track Other Timezone</h3>
+            <div class="flex space-x-2">
+                <input type="text" id="location-input" placeholder="Enter City or Country (e.g., Tokyo, London, Jakarta, Lagos)" class="flex-grow p-2 rounded-lg text-sm text-white placeholder-gray-400">
+                <button onclick="handleLocationInput()" class="btn-primary text-white font-bold py-2 px-4 rounded-lg shadow-md">Set</button>
+            </div>
+            <p id="location-status" class="text-xs mt-2 text-gray-400">
+                Timezone Resolver is **100% OFFLINE**. It uses an internal map (including Indonesia and Korea).
+            </p>
+        </div>
+
+        
+        <div id="active-event-window" class="glass-panel p-6 mb-8 rounded-xl text-center">
+            
+            <h2 class="text-2xl font-bold text-card-light mb-1">Initializing Clock...</h2>
+        </div>
+
+
+        
+        <div class="clock-container glass-panel p-6 mb-8 rounded-xl grid grid-cols-3 gap-4 text-center">
+            
+            <div class="col-span-1">
+                <h3 class="text-xs text-gray-300 mb-1 uppercase tracking-widest font-semibold">Sky Server Time (PST/PDT)</h3>
+                <div class="text-xl md:text-2xl font-mono" id="sky-time">--:--:--</div>
+            </div>
+            
+            <div class="col-span-1">
+                <h3 class="text-xs text-gray-300 mb-1 uppercase tracking-widest font-semibold">Local Time</h3>
+                <div class="text-xl md:text-2xl font-mono" id="local-time">--:--:--</div>
+            </div>
+            
+            <div class="col-span-1">
+                <h3 class="text-xs text-gray-300 mb-1 uppercase tracking-widest font-semibold overflow-hidden whitespace-nowrap" id="specified-label">Other Time</h3>
+                <div class="text-xl md:text-2xl font-mono" id="specified-time">--:--:--</div>
+            </div>
+        </div>
+
+        
+        <div class="main-content space-y-4">
+            
+            
+            <details open class="glass-panel rounded-xl overflow-hidden">
+                <summary class="p-4 font-bold text-lg bg-white/5 flex justify-between items-center cursor-pointer">
+                    <span>🕯️ Major Wax Events</span>
+                </summary>
+                <div class="p-0">
+                    
+                    <div class="grid grid-cols-5 p-3 text-xs uppercase text-gray-400 border-b border-white/10 font-semibold">
+                        <div class="col-span-2">Event Name</div>
+                        <div>Local Time</div>
+                        <div class="text-right">Countdown</div>
+                        <div class="text-center">Alert</div>
+                    </div>
+                    <div id="wax-container">
+                        
+                    </div>
+                </div>
+            </details>
+
+            
+            <details open class="glass-panel rounded-xl overflow-hidden">
+                <summary class="p-4 font-bold text-lg bg-white/5 flex justify-between items-center cursor-pointer">
+                    <span id="quest-header-text">✨ Daily Quests & Resets</span>
+                </summary>
+                <div class="p-0">
+                    
+                    <div class="grid grid-cols-4 p-3 text-xs uppercase text-gray-400 border-b border-white/10 font-semibold">
+                        <div class="col-span-2">Event Name</div>
+                        <div>Local Time</div>
+                        <div class="text-right">Countdown</div>
+                    </div>
+                    <div id="quest-container">
+                        
+                    </div>
+                </div>
+            </details>
+
+            
+            <details open class="glass-panel rounded-xl overflow-hidden">
+                <summary class="p-4 font-bold text-lg bg-accent-purple/10 flex justify-between items-center cursor-pointer">
+                    <span>🔥 Special & Seasonal Events</span>
+                </summary>
+                <div class="p-0">
+                    <div class="grid grid-cols-4 p-3 text-xs uppercase text-gray-400 border-b border-white/10 font-semibold">
+                        <div class="col-span-2">Event Name</div>
+                        <div>Status</div>
+                        <div class="text-right">Next Update Est.</div>
+                    </div>
+                    <div id="seasonal-container">
+                        
+                    </div>
+                </div>
+            </details>
+        </div>
+
+        
+        <footer class="mt-10 text-center text-sm">
+            <p class="text-sm text-gray-400 mb-1">
+                Disclaimer: This is a fan-made website for Sky time, not an official website.
+            </p>
+            <!-- NEW CREATOR CREDIT ADDED HERE -->
+            <p class="text-xs text-center text-accent-blue uppercase tracking-widest font-semibold mt-2">
+                Created by VK_GAMES_SOFTWARES
+            </p>
+            <p class="text-xs text-center text-gray-500 uppercase tracking-widest font-semibold mt-1">
+                Report problems at: contactvkdev@gmail.com
+            </p>
+            <p class="text-xs text-gray-700 mt-2" id="user-id-display">Initializing user...</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- OFFLINE TIMEZONE MAPPING DATA (EXPANDED) ---
+        // This map is the source of truth for location lookups and requires NO internet connection.
+        // NOTE: Due to the complexity and size of the full IANA time zone database (400+ zones), 
+        // we can only include a limited set of the most commonly requested global cities/regions here.
+        const OFFLINE_TIMEZONE_MAP = {
+            // North America
+            'new york': 'America/New_York', 'nyc': 'America/New_York', 'eastern': 'America/New_York',
+            'los angeles': 'America/Los_Angeles', 'la': 'America/Los_Angeles', 'pacific': 'America/Los_Angeles',
+            'chicago': 'America/Chicago', 'central': 'America/Chicago',
+            'toronto': 'America/Toronto', 'mexico city': 'America/Mexico_City',
+            'vancouver': 'America/Vancouver', 'montreal': 'America/Montreal', 'canada': 'America/Toronto',
+            
+            // Europe
+            'london': 'Europe/London', 'uk': 'Europe/London', 'britain': 'Europe/London',
+            'paris': 'Europe/Paris', 'france': 'Europe/Paris', 'berlin': 'Europe/Berlin', 'germany': 'Europe/Berlin',
+            'rome': 'Europe/Rome', 'italy': 'Europe/Rome',
+            'moscow': 'Europe/Moscow', 'russia': 'Europe/Moscow',
+            'madrid': 'Europe/Madrid', 'spain': 'Europe/Madrid',
+            'istanbul': 'Europe/Istanbul', 'turkey': 'Europe/Istanbul',
+            'dublin': 'Europe/Dublin', 'ireland': 'Europe/Dublin',
+            'helsinki': 'Europe/Helsinki', 'finland': 'Europe/Helsinki',
+
+            // Asia / Middle East
+            'tokyo': 'Asia/Tokyo', 'japan': 'Asia/Tokyo',
+            'shanghai': 'Asia/Shanghai', 'beijing': 'Asia/Shanghai', 'china': 'Asia/Shanghai',
+            'mumbai': 'Asia/Kolkata', 'delhi': 'Asia/Kolkata', 'india': 'Asia/Kolkata', 'ist': 'Asia/Kolkata',
+            'dubai': 'Asia/Dubai', 'uae': 'Asia/Dubai',
+            'hong kong': 'Asia/Hong_Kong',
+            'seoul': 'Asia/Seoul', 'korea': 'Asia/Seoul', 'south korea': 'Asia/Seoul',
+            'jakarta': 'Asia/Jakarta', 'indonesia': 'Asia/Jakarta', 'wib': 'Asia/Jakarta',
+            'manila': 'Asia/Manila', 'philippines': 'Asia/Manila',
+            'hanoi': 'Asia/Ho_Chi_Minh', 'vietnam': 'Asia/Ho_Chi_Minh',
+            'bangkok': 'Asia/Bangkok', 'thailand': 'Asia/Bangkok',
+            'taipei': 'Asia/Taipei', 'taiwan': 'Asia/Taipei',
+            'riyadh': 'Asia/Riyadh', 'saudi arabia': 'Asia/Riyadh',
+
+            // Australia / Oceania
+            'sydney': 'Australia/Sydney', 'australia': 'Australia/Sydney',
+            'auckland': 'Pacific/Auckland', 'new zealand': 'Pacific/Auckland',
+
+            // Africa
+            'cairo': 'Africa/Cairo', 'egypt': 'Africa/Cairo',
+            'johannesburg': 'Africa/Johannesburg', 'south africa': 'Africa/Johannesburg',
+            'lagos': 'Africa/Lagos', 'nigeria': 'Africa/Lagos',
+
+            // South America
+            'sao paulo': 'America/Sao_Paulo', 'brazil': 'America/Sao_Paulo', 'rio de janeiro': 'America/Sao_Paulo',
+            'lima': 'America/Lima', 'peru': 'America/Lima',
+            'buenos aires': 'America/Argentina/Buenos_Aires', 'argentina': 'America/Argentina/Buenos_Aires',
+            'santiago': 'America/Santiago', 'chile': 'America/Santiago',
+        };
+
+        function getTimezoneFromLocalMap(location) {
+            const normalizedLocation = location.toLowerCase().trim();
+            return OFFLINE_TIMEZONE_MAP[normalizedLocation] || null;
+        }
+
+        // --- GLOBAL FIREBASE/STATE VARIABLES ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Note: We check if the config variables EXIST before trying to parse/use them
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Private path for user settings (notifications)
+        const NOTIFICATION_COLLECTION_PATH = `/artifacts/${appId}/users`;
+        
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        let notificationPreferences = {};
+        let hasNotified = {}; // Tracks notifications fired to prevent repeat beeps
+        let firebaseEnabled = false; 
+        
+        // --- DOM ELEMENTS & STATE ---
+        let specifiedTimezone = null;
+        let specifiedLocationName = "Other Time";
+        const statusElement = document.getElementById('location-status'); 
+        const specifiedLabelElement = document.getElementById('specified-label');
+        const activeWindow = document.getElementById('active-event-window');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const customMessage = document.getElementById('custom-message');
+        const messageText = document.getElementById('message-text');
+        const messageDetail = document.getElementById('message-detail');
+        const questHeaderText = document.getElementById('quest-header-text');
+        
+        // --- CONFIGURATION: Define Stock Event Schedules ---
+        const stockEvents = [
+            // Wax Events (occur every 2 hours, 120 minutes, from :05 PST)
+            { name: "Geyser (Sanctuary)", category: "wax", offsetMinutes: 5, intervalMinutes: 120, durationMinutes: 10, alertMinutes: 5 },
+            // Grandma (Hidden Forest)
+            { name: "Grandma (Hidden Forest)", category: "wax", offsetMinutes: 35, intervalMinutes: 120, durationMinutes: 10, alertMinutes: 5 }, 
+            { name: "Turtle (Treasure Reef)", category: "wax", offsetMinutes: 50, intervalMinutes: 120, durationMinutes: 10, alertMinutes: 5 },
+            // Shard Events (Red/Black) - Follow a 4-hour cycle from 01:40 PST (100 min offset)
+            { name: "Shard Drop (4H Cycle)", category: "wax", offsetMinutes: 100, intervalMinutes: 240, durationMinutes: 20, alertMinutes: 10 }, 
+            // Nest Sunset (17:00 PST/PDT = 1020 minutes offset)
+            { name: "Nest Sunset (Home)", category: "wax", offsetMinutes: 1020, intervalMinutes: 1440, durationMinutes: 10, alertMinutes: 5 },
+            
+            // Quests and Resets (daily, 1440 minutes)
+            { name: "Daily Quests Realm Reset", category: "quest", offsetMinutes: 0, intervalMinutes: 1440, isDailyQuestReset: true }, 
+            { name: "Passage Quests Reset", category: "quest", offsetMinutes: 0, intervalMinutes: 1440, isPassageQuestReset: true }, 
+            { name: "Dream Scatter Eruption", category: "quest", offsetMinutes: 0, intervalMinutes: 1440, durationMinutes: 1440, isDreamScatter: true }, 
+            { name: "Seasonal Candle Reset", category: "quest", offsetMinutes: 30, intervalMinutes: 1440 }, 
+            { name: "Traveling Spirit Cycle", category: "quest", isTravelingSpirit: true }, // Marker for special calculation
+
+            // Seasonal Events (Always Inactive Placeholder for now)
+            { name: "Aurora Concert", category: "seasonal", isSeasonal: true },
+            { name: "Fire Festival", category: "seasonal", isSeasonal: true }
+        ];
+
+        // 6-day cycle for daily quests, starting with Isle of Dawn (Index 0)
+        const REALM_CYCLE = [
+            "Isle of Dawn",
+            "Daylight Prairie",
+            "Hidden Forest",
+            "Valley of Triumph",
+            "Golden Wasteland",
+            "Vault of Knowledge"
+        ];
+        
+        // Reference Date: Friday, November 1st, 2024, 00:00 PST (Start of an Isle of Dawn day)
+        // Used to calculate which day in the 6-day cycle it is.
+        const REALM_EPOCH_PST = new Date(Date.UTC(2024, 10, 1, 8, 0, 0)); 
+        // Note: Month 10 is November (0-indexed). 8:00 UTC is 00:00 PST/PDT.
+
+        // Shard Logic: 4-day cycle (Red, Red, Black, Black)
+        // Red Shard Locations follow a 4-day cycle within the 4 Red Shard realms.
+        const RED_SHARD_CYCLE = [
+             { realm: "Hidden Forest", intensity: "Medium/Hard" }, // Day 0
+             { realm: "Valley of Triumph", intensity: "Medium/Hard" }, // Day 1
+             { realm: "Golden Wasteland", intensity: "Medium/Hard" }, // Day 2
+             { realm: "Vault of Knowledge", intensity: "Medium/Hard" } // Day 3
+        ];
+        // Epoch: Sunday, Nov 3, 2024, 00:00 PST (Start of a known Red Shard cycle)
+        const SHARD_EPOCH_PST = new Date(Date.UTC(2024, 10, 3, 8, 0, 0)); 
+
+        // --- UTILITY FUNCTIONS ---
+
+        /**
+         * Plays a simple notification sound (sine wave beep).
+         */
+        function makeNoise() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note
+                gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.warn("Audio playback failed (browser restrictions):", e);
+            }
+        }
+
+        /**
+         * Displays a custom modal/banner message.
+         * @param {string} text - The main message.
+         * @param {string} type - 'success', 'error', 'alert'.
+         */
+        function showCustomMessage(text, type, detail = '') {
+            let bgColor = 'bg-accent-blue';
+            if (type === 'success') bgColor = 'bg-accent-green';
+            if (type === 'error') bgColor = 'bg-accent-red';
+            if (type === 'alert') bgColor = 'bg-accent-orange';
+
+            // Reset and apply new styles
+            customMessage.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-x-full opacity-0 max-w-sm ${bgColor}`;
+            messageText.textContent = text;
+            messageDetail.textContent = detail;
+            
+            // Show message
+            setTimeout(() => {
+                customMessage.classList.remove('translate-x-full', 'opacity-0');
+            }, 50);
+
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                customMessage.classList.add('translate-x-full', 'opacity-0');
+            }, 5000);
+        }
+
+        const formatCountdown = (h, m, s) => `${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
+
+        // --- FIREBASE DATA LOGIC (ONLY FOR NOTIFICATIONS) ---
+
+        /**
+         * Initializes Firebase services and performs authentication.
+         */
+        async function initializeFirebase() {
+            if (!firebaseConfig) {
+                // If config is missing (running outside of the platform), disable Firebase
+                console.error("FIREBASE: Configuration missing. Running in non-persistent/non-authenticated mode.");
+                userIdDisplay.textContent = "ATTENTION: Firebase configuration missing. Notifications are disabled.";
+                userId = crypto.randomUUID(); 
+                isAuthReady = true; 
+                firebaseEnabled = false;
+                updateClock(); // Start the main clock loop immediately
+                return;
+            }
+            
+            // Proceed with normal Firebase initialization
+            firebaseEnabled = true;
+            setLogLevel('Debug');
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase authentication failed:", error);
+            }
+            
+            // Listen for auth state change
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userIdDisplay.textContent = `User ID: ${userId.substring(0, 10)}... (Auth)`;
+                } else {
+                    userId = crypto.randomUUID(); 
+                    userIdDisplay.textContent = `Anonymous ID: ${userId.substring(0, 10)}... (Anon)`;
+                }
+                isAuthReady = true;
+                console.log("Auth is ready. Current User ID:", userId);
+                loadNotifications(); // Start loading preferences once user ID is known
+                updateClock(); // Force initial update
+            });
+        }
+
+        /**
+         * Loads user notification preferences using a real-time listener.
+         */
+        function loadNotifications() {
+            if (!firebaseEnabled || !isAuthReady || !userId) return;
+
+            // Path: /artifacts/{appId}/users/{userId}/settings/notifications
+            const notificationsDocRef = doc(db, NOTIFICATION_COLLECTION_PATH, userId, 'settings', 'notifications');
+            
+            onSnapshot(notificationsDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    notificationPreferences = docSnap.data().preferences || {};
+                } else {
+                    notificationPreferences = {};
+                }
+                hasNotified = {}; 
+                updateClock(); 
+            }, (error) => {
+                console.error("Error fetching notifications:", error);
+            });
+        }
+
+        /**
+         * Toggles the notification setting for a specific event and saves it to Firestore.
+         */
+        window.toggleNotification = async function(eventName) {
+            if (!firebaseEnabled || !isAuthReady || !userId || !db) {
+                showCustomMessage("Notifications Disabled", 'alert', 'Firebase is not connected. This feature requires the platform environment.');
+                return;
+            }
+
+            const isCurrentlyEnabled = !!notificationPreferences[eventName];
+            notificationPreferences[eventName] = !isCurrentlyEnabled;
+
+            const notificationsDocRef = doc(db, NOTIFICATION_COLLECTION_PATH, userId, 'settings', 'notifications');
+
+            try {
+                await setDoc(notificationsDocRef, {
+                    preferences: notificationPreferences,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+                
+                showCustomMessage(`${eventName} Alert ${!isCurrentlyEnabled ? 'Enabled' : 'Disabled'}`, 'success', 'Preference saved.');
+
+            } catch (e) {
+                console.error("Error updating notification preference:", e);
+                showCustomMessage("Failed to save alert preference.", 'error', e.message);
+                notificationPreferences[eventName] = isCurrentlyEnabled; // Revert local state on failure
+            }
+        }
+
+
+        // --- OFFLINE TIMEZONE HANDLER ---
+
+        window.handleLocationInput = function() {
+            const inputElement = document.getElementById('location-input');
+            const location = inputElement.value.trim();
+            const statusElement = document.getElementById('location-status');
+
+            if (location.length < 2) {
+                statusElement.textContent = "Please enter a valid city or country name.";
+                statusElement.classList.remove('text-yellow-300', 'text-accent-green');
+                statusElement.classList.add('text-accent-red');
+                return;
+            }
+
+            // 100% OFFLINE LOOKUP
+            const timezoneId = getTimezoneFromLocalMap(location);
+
+            if (timezoneId) {
+                specifiedTimezone = timezoneId;
+                // Use the location name if provided, otherwise use the IANA ID
+                specifiedLocationName = location.length > 20 ? timezoneId : location.toUpperCase();
+                
+                // Update UI elements
+                specifiedLabelElement.textContent = specifiedTimezone.split('/').pop().replace(/_/g, ' '); 
+                statusElement.textContent = `Timezone set to: ${specifiedTimezone} (Offline)`;
+                statusElement.classList.remove('text-yellow-300', 'text-accent-green');
+                statusElement.classList.add('text-accent-red');
+                
+            } else {
+                specifiedTimezone = null;
+                specifiedLocationName = "Other Time";
+                
+                // Update UI elements
+                specifiedLabelElement.textContent = "Other Time";
+                document.getElementById('specified-time').textContent = "--:--:--";
+                statusElement.textContent = `Could not find a timezone for "${location}". Try a major city (e.g., Jakarta, Seoul, Lagos).`;
+                statusElement.classList.remove('text-yellow-300', 'text-accent-green');
+                statusElement.classList.add('text-accent-red');
+            }
+        }
+
+        // --- CLOCK AND EVENT LOGIC ---
+
+        function getTravelingSpiritEvent(skyTime, now) {
+            const TS_INTERVAL_MINUTES = 20160; 
+            const TS_DURATION_MINUTES = 4320; 
+            const diffMs = skyTime.getTime() - REALM_EPOCH_PST.getTime();
+            const diffMinutes = Math.floor(diffMs / 60000);
+            const minutesInCycle = diffMinutes % TS_INTERVAL_MINUTES;
+            let status, countdownMs, timeString;
+            let isArrived = minutesInCycle < TS_DURATION_MINUTES; 
+
+            if (isArrived) {
+                status = "HERE (Leaves)";
+                timeString = new Date(skyTime.getTime() + (TS_DURATION_MINUTES - minutesInCycle) * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+                countdownMs = (TS_DURATION_MINUTES - minutesInCycle) * 60000;
+            } else {
+                status = "GONE (Arrives)";
+                const minutesToNextArrival = TS_INTERVAL_MINUTES - minutesInCycle;
+                timeString = new Date(skyTime.getTime() + minutesToNextArrival * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'America/Los_Angeles' });
+                countdownMs = minutesToNextArrival * 60000;
+            }
+
+            return {
+                name: "Traveling Spirit",
+                category: "quest",
+                localTime: new Date(skyTime.getTime() + countdownMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                countdown: countdownMs,
+                status: status,
+                className: isArrived ? "text-accent-red" : "text-card-light",
+                alertMinutes: 120 
+            };
+        }
+
+        function getDailyQuestRealm(skyTime) {
+            const diffMs = skyTime.getTime() - REALM_EPOCH_PST.getTime();
+            const diffDays = Math.floor(diffMs / 86400000); 
+            const dayIndex = diffDays % REALM_CYCLE.length;
+            const currentRealm = REALM_CYCLE[dayIndex];
+            questHeaderText.textContent = `✨ Daily Quests & Resets (${currentRealm} Active)`;
+            return currentRealm;
+        }
+
+        function getShardDetails(skyTime) {
+            const diffMs = skyTime.getTime() - SHARD_EPOCH_PST.getTime();
+            const diffDays = Math.floor(diffMs / 86400000);
+            const dayIndex = diffDays % RED_SHARD_CYCLE.length;
+            const isRedShardDay = (dayIndex === 0 || dayIndex === 1); 
+            const isBlackShardDay = (dayIndex === 2 || dayIndex === 3);
+
+            let details = { name: "No Shard Event", className: "text-gray-500", shortName: "None" };
+
+            if (isRedShardDay) {
+                const redShardCycleIndex = diffDays % RED_SHARD_CYCLE.length;
+                const shardInfo = RED_SHARD_CYCLE[redShardCycleIndex];
+                details.name = `Red Shard: ${shardInfo.realm} (${shardInfo.intensity})`;
+                details.className = "text-accent-red";
+                details.shortName = "Red";
+            } else if (isBlackShardDay) {
+                details.name = "Black Shard: Random Realm (Easy)";
+                details.className = "text-gray-400";
+                details.shortName = "Black";
+            }
+            return details;
+        }
+
+
+        /**
+         * Main function to update all clocks and event countdowns.
+         */
+        function updateClock() {
+            // Check for auth readiness before running full event logic, but run clock regardless
+            if (!isAuthReady && firebaseEnabled) {
+                setTimeout(updateClock, 100); 
+                return;
+            }
+
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const localTimeStr = now.toLocaleTimeString('en-US', options);
+
+            // 1. Calculate Sky Server Time (PST/PDT)
+            const skyTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Los_Angeles" }));
+            const skyTimeStr = skyTime.toLocaleTimeString('en-US', options);
+
+            document.getElementById('sky-time').textContent = skyTimeStr;
+            document.getElementById('local-time').textContent = localTimeStr;
+
+            // 2. Update Specified Time
+            if (specifiedTimezone) {
+                document.getElementById('specified-time').textContent = now.toLocaleTimeString('en-US', { ...options, timeZone: specifiedTimezone });
+            } else {
+                 document.getElementById('specified-time').textContent = "--:--:--";
+            }
+
+            // 3. Determine Dynamic Event Details
+            const currentQuestRealm = getDailyQuestRealm(skyTime);
+            const shardDetails = getShardDetails(skyTime);
+            
+            // 4. Calculate Event Instances and Render UI
+            let allEvents = [];
+            let activeEvent = null;
+
+            const baseEvents = [...stockEvents];
+            const travelingSpirit = baseEvents.find(e => e.isTravelingSpirit);
+            if (travelingSpirit) {
+                const tsEvent = getTravelingSpiritEvent(skyTime, now);
+                const index = baseEvents.indexOf(travelingSpirit);
+                baseEvents.splice(index, 1, tsEvent);
+            }
+
+            const activeEvents = [];
+
+            baseEvents.forEach(event => {
+                if (event.isTravelingSpirit) return; 
+
+                let eventData = { ...event };
+                
+                if (event.offsetMinutes !== undefined) {
+                    const minutesSinceEpoch = (skyTime.getHours() * 60) + skyTime.getMinutes();
+                    const minutesIntoCycle = (minutesSinceEpoch - event.offsetMinutes) % event.intervalMinutes;
+                    
+                    let minutesToNext = event.intervalMinutes - minutesIntoCycle;
+
+                    let isActive = false;
+                    if (event.durationMinutes) {
+                        if (minutesIntoCycle >= 0 && minutesIntoCycle < event.durationMinutes) {
+                            isActive = true;
+                            minutesToNext = event.intervalMinutes - minutesIntoCycle; 
+                        } else if (minutesIntoCycle > event.durationMinutes) {
+                            minutesToNext = event.intervalMinutes - minutesIntoCycle;
+                        }
+                    }
+                    
+                    if (minutesToNext < 0) {
+                        minutesToNext += event.intervalMinutes;
+                    }
+
+                    if (event.intervalMinutes === 1440 && !event.durationMinutes) {
+                        const targetMinutes = event.offsetMinutes;
+                        let currentMinutes = skyTime.getHours() * 60 + skyTime.getMinutes();
+                        
+                        if (currentMinutes >= targetMinutes) {
+                            minutesToNext = 1440 - (currentMinutes - targetMinutes);
+                        } else {
+                            minutesToNext = targetMinutes - currentMinutes;
+                        }
+                    }
+
+                    const countdownMs = minutesToNext * 60000 - (skyTime.getSeconds() * 1000);
+                    const nextEventLocal = new Date(now.getTime() + countdownMs);
+
+                    eventData.countdown = countdownMs;
+                    eventData.localTime = nextEventLocal.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    eventData.isActive = isActive;
+
+                    if (eventData.name.includes("Shard Drop")) {
+                        eventData.name = shardDetails.name;
+                        eventData.className = shardDetails.className;
+                    }
+                    
+                    if (isActive) {
+                        activeEvents.push({
+                            name: eventData.name,
+                            countdown: eventData.countdown
+                        });
+                        eventData.statusText = "ACTIVE";
+                    } else if (event.intervalMinutes === 1440) {
+                        eventData.statusText = nextEventLocal.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+                    
+
+                } else if (event.isSeasonal) {
+                    eventData.localTime = "N/A";
+                    eventData.countdown = 0;
+                    eventData.statusText = "Seasonal Rotation";
+                }
+
+
+                // Check for alert notification (Only if Firebase is enabled)
+                if (firebaseEnabled && eventData.alertMinutes && eventData.countdown > 0) {
+                    const alertMs = eventData.alertMinutes * 60000;
+                    const diffMs = eventData.countdown;
+                    const alertEventName = eventData.name;
+                    
+                    if (!eventData.isActive && diffMs > 0 && diffMs <= alertMs) {
+                        if (notificationPreferences[alertEventName]) {
+                            const notificationKey = alertEventName + eventData.localTime;
+                            if (!hasNotified[notificationKey]) {
+                                makeNoise();
+                                showCustomMessage(`Alert: ${alertEventName}`, 'alert', `Starts in ~${Math.ceil(diffMs / 60000)} minutes.`);
+                                hasNotified[notificationKey] = true; 
+                            }
+                        }
+                    }
+                }
+                
+                allEvents.push(eventData);
+            });
+
+
+            // 5. Update Active Event Window
+            if (activeEvents.length > 0) {
+                const firstActive = activeEvents[0];
+                const h = Math.floor(firstActive.countdown / 3600000);
+                const m = Math.floor((firstActive.countdown % 3600000) / 60000);
+                const s = Math.floor((firstActive.countdown % 60000) / 1000);
+                
+                activeWindow.innerHTML = `
+                    <h3 class="text-sm font-semibold text-accent-green mb-1 uppercase tracking-widest drop-shadow-lg">Active Now!</h3>
+                    <h2 class="text-3xl font-bold text-card-light mb-2">${firstActive.name}</h2>
+                    <p class="text-xl text-gray-400 mb-4">ENDS IN:</p>
+                    <div class="text-6xl md:text-7xl font-mono font-extrabold text-accent-green drop-shadow-xl">
+                        ${h > 0 ? `${h}h ` : ''}${m}m ${s}s
+                    </div>
+                `;
+            } else {
+                activeWindow.innerHTML = `
+                    <h3 class="text-sm font-semibold text-accent-blue mb-1 uppercase tracking-widest drop-shadow-lg">A Quiet Time</h3>
+                    <h2 class="text-2xl font-bold text-card-light mb-1">Waiting for the next event...</h2>
+                    <p class="text-md text-gray-400">The server is resting, but the journey continues.</p>
+                `;
+            }
+
+
+            // 6. Render Event Containers
+            const waxContainer = document.getElementById('wax-container');
+            const questContainer = document.getElementById('quest-container');
+            const seasonalContainer = document.getElementById('seasonal-container');
+
+            waxContainer.innerHTML = '';
+            questContainer.innerHTML = '';
+            seasonalContainer.innerHTML = '';
+
+            allEvents.forEach(event => {
+                const h = Math.floor(event.countdown / 3600000);
+                const m = Math.floor((event.countdown % 3600000) / 60000);
+                const s = Math.floor((event.countdown % 60000) / 1000);
+                
+                const countdownStr = event.countdown > 0 ? formatCountdown(h, m, s) : event.statusText || 'N/A';
+                
+                let timeOrStatus = event.localTime;
+                if (event.isActive) {
+                    timeOrStatus = `<span class="text-accent-green font-bold">ACTIVE</span>`;
+                } else if (event.status) {
+                    timeOrStatus = `<span class="${event.className || 'text-gray-400'} font-bold">${event.status}</span>`;
+                } else if (event.intervalMinutes === 1440 && !event.isActive) {
+                    timeOrStatus = `<span class="text-gray-300 font-semibold">${event.localTime}</span>`;
+                }
+
+                const alertButton = event.alertMinutes && event.category === 'wax' ? `
+                    <button 
+                        class="alert-button text-sm w-8 h-8 flex items-center justify-center rounded-full ${notificationPreferences[event.name] ? 'bg-accent-green/30 text-accent-green' : 'bg-gray-600/30 text-gray-400'}" 
+                        onclick="toggleNotification('${event.name}')"
+                        title="Toggle alert ${event.alertMinutes} minutes before event"
+                        ${!firebaseEnabled ? 'disabled' : ''}
+                    >
+                        ${notificationPreferences[event.name] ? '🔔' : '🔕'}
+                    </button>
+                ` : '<div></div>'; 
+
+                const html = `
+                    <div class="event-row grid grid-cols-5 py-3 px-4 text-sm border-b border-white/5 items-center transition duration-200">
+                        <div class="col-span-2 text-card-light font-semibold">${event.isDailyQuestReset ? `Daily Quest Reset (${currentQuestRealm})` : event.name}</div>
+                        <div class="text-gray-400 font-mono">${timeOrStatus}</div>
+                        <div class="text-right ${event.isActive ? 'text-accent-green font-bold' : 'text-accent-blue'} font-mono">${countdownStr}</div>
+                        <div class="text-center">${event.category === 'wax' ? alertButton : ''}</div>
+                    </div>
+                `;
+                
+                const htmlQuest = `
+                    <div class="event-row grid grid-cols-4 py-3 px-4 text-sm border-b border-white/5 items-center transition duration-200">
+                        <div class="col-span-2 text-card-light font-semibold">${event.isDailyQuestReset ? `Daily Quest Reset (${currentQuestRealm})` : event.name}</div>
+                        <div class="text-gray-400 font-mono">${event.localTime}</div>
+                        <div class="text-right text-accent-blue font-mono">${countdownStr}</div>
+                    </div>
+                `;
+                
+                const htmlSeasonal = `
+                    <div class="event-row grid grid-cols-4 py-3 px-4 text-sm border-b border-white/5 items-center transition duration-200">
+                        <div class="col-span-2 text-card-light font-semibold">${event.name}</div>
+                        <div class="text-gray-400 font-mono">${timeOrStatus}</div>
+                        <div class="text-right text-accent-purple font-mono">${event.statusText}</div>
+                    </div>
+                `;
+
+                if (event.category === 'wax') waxContainer.innerHTML += html;
+                if (event.category === 'quest') questContainer.innerHTML += htmlQuest;
+                if (event.category === 'seasonal') seasonalContainer.innerHTML += htmlSeasonal;
+            });
+
+
+            // 7. Schedule next update
+            setTimeout(updateClock, 1000); 
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = initializeFirebase;
+
+    </script>
+</body>
+</html>
+
